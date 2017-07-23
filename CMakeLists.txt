@@ -2,7 +2,10 @@ project(PID)
 
 cmake_minimum_required (VERSION 3.5)
 
-add_definitions(-std=c++11)
+#-DMODE_NORMAL
+#-DMODE_MANUAL
+#-DMODE_TWIDDLE
+add_definitions(-std=c++11 -DMODE_NORMAL)
 
 set(CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS "${CXX_FLAGS}")
