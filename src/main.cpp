@@ -147,17 +147,25 @@ int main(int argc, char* argv[])
 {
 #ifdef MODE_TWIDDLE
   std::cout << "TWIDDLE MODE" << std::endl;
-  check_arguments(argc, argv);
 #elif MODE_MANUAL
   std::cout << "MANUAL MODE" << std::endl;
-  check_arguments(argc, argv);
 #elif MODE_NORMAL
   std::cout << "NORMAL MODE" << std::endl;
 #endif
 
   std::string out_file_name_ = "../output.txt";
   std::ofstream out_file_(out_file_name_.c_str(), std::ofstream::out);
-  out_file_ << "BestError tolerance Kp Ki Kd" << std::endl;
+#ifndef MODE_NORMAL
+  check_arguments(argc, argv);
+#endif
+
+#ifdef MODE_TWIDDLE
+  out_file_ << "it BestError Tolerance Kp Ki Kd" << std::endl;
+#elif MODE_MANUAL
+  out_file_ << "it Road TotalError AverageError Kp Ki Kd" << std::endl;
+#elif MODE_NORMAL
+  out_file_ << "it CTE SteeringValue" << std::endl;
+#endif
 
   uWS::Hub h;
 
@@ -225,26 +233,29 @@ int main(int argc, char* argv[])
               || (timeout > 50)) // Timeout case: car stop in a large time
           {
 #ifdef MODE_TWIDDLE
-            out_file_ << best_err << "\t" 
-                      << dp[0]+dp[1]+dp[2] 
+            out_file_ << it << "\t" 
+                      << best_err << "\t" 
+                      << dp[0]+dp[1]+dp[2] << "\t" 
                       << p[0] << "\t" << p[1] << "\t" << p[2] << "\t" 
                       << std::endl;
-            std::cout << it
-                      << " best_err " << best_err 
+            std::cout << it << "\t" 
+                      << "best_err " << best_err 
                       << " tolerance: " << dp[0]+dp[1]+dp[2]
                       << " Kp: " << p[0] << " Ki: " << p[1] << " Kd: " << p[2] 
                       << " dKp: " << dp[0] << " dKi: " << dp[1] << " dKd: " << dp[2] 
                       << std::endl;
             twiddle();
 #elif MODE_MANUAL
+            out_file_ << it << "\t" 
+                      << road << "\t" 
+                      << err << "\t" 
+                      << err/it << "\t" 
+                      << p[0] << "\t" << p[1] << "\t" << p[2] << "\t" 
+                      << std::endl;
             std::cout << it
                       << " road " << road
                       << " total_err " << err 
                       << " average_err " << err/it 
-                      << " Kp: " << p[0] << " Ki: " << p[1] << " Kd: " << p[2] 
-                      << std::endl;
-            out_file_ << it
-                      << " err " << err 
                       << " Kp: " << p[0] << " Ki: " << p[1] << " Kd: " << p[2] 
                       << std::endl;
             p[0] += 1; // Change this to update all p[]
@@ -279,9 +290,9 @@ int main(int argc, char* argv[])
           }
           steer_value = (deg2rad(angle) + steer_value) / 2;
 #ifdef MODE_NORMAL
+          out_file_ << it << "\t" << cte << "\t" << steer_value << std::endl;
           // DEBUG
-          std::cout << it << " CTE: " << cte << " Steering Value: " << steer_value << std::endl;
-          out_file_ << it << " CTE: " << cte << " Steering Value: " << steer_value << std::endl;
+          std::cout << it << "\t" << cte << "\t" << steer_value << std::endl;
 #endif
 
           if (fabs(steer_value) > 0.3 && speed > 50)
