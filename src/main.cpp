@@ -62,17 +62,19 @@ void check_arguments(int argc, char* argv[])
 
 const double steer_value_max = 1; // ~ deg2rad(57) ~ car 25deg
 const double steer_value_min = -1; // ~ deg2rad(57) ~ car -25deg
-const double throttle_max = 1.0;
+const double throttle_max = 0.5;
 struct timeval tp;
 double pre_time = 0;
 
-double p[3] = {0.6, 0.0001, 1.0};
+double p[3] = {0.2, 0.098, 0.08};
 unsigned int it = 0; // Count number of test sample
 unsigned int timeout = 0; // Count time in case Car cannot run
 double err = 0;
-unsigned int road = 0;
+double road = 0;
+bool isConnected = false; // Check simulator status
+
 #ifdef MODE_TWIDDLE
-double dp[3] = {0.1, 0.0001, 1.0};
+double dp[3] = {0.1, 0.001, 0.01};
 unsigned int id = 0; // check p[] ~ Kp Ki Kd
 unsigned int step = 0; // Jump step by step of twiddle
 double best_err = 0;
@@ -91,7 +93,6 @@ void twiddle()
   if (dp[0]+dp[1]+dp[2] > threshold)
   {
     while (isRun == false)
-            //|| (p[0]==0 && p[1]==0 && p[2]==0)) // No meaning case
     {
       if (step == 0)
       {
@@ -194,12 +195,12 @@ int main(int argc, char* argv[])
       {
         auto j = json::parse(s);
         std::string event = j[0].get<std::string>();
-        if (event == "telemetry")
+        if (event == "telemetry" && isConnected == true)
         {
           // j[1] is the data JSON object
           double cte = std::stod(j[1]["cte"].get<std::string>());
           double speed = std::stod(j[1]["speed"].get<std::string>());
-          double angle = std::stod(j[1]["steering_angle"].get<std::string>());
+          //double angle = std::stod(j[1]["steering_angle"].get<std::string>());
           double steer_value = 0;
           double throttle_value = 0;
           /*
@@ -211,9 +212,9 @@ int main(int argc, char* argv[])
           gettimeofday(&tp, NULL);
           double current_time = tp.tv_sec * 1000 + tp.tv_usec / 1000;
           double dt = current_time - pre_time;
-          if (dt == 0)
+          if (dt == 0 || dt > 30)
           {
-            dt = 15;
+            dt = 18;
           }
           pre_time = current_time;
 
@@ -226,9 +227,9 @@ int main(int argc, char* argv[])
             timeout = 0;
           }
 
-          if ((it > 100 && fabs(cte) > 4.5) // Car throw out lane after start 100 frame
+          if ((it > 100 && fabs(cte) > 3.5) // Car throw out lane after start 100 frame
 #ifndef MODE_NORMAL
-              || (it > 6000) // Car finish 1 lap : 5000
+              || (road > 1200) // 1 lap : 1200m - max speed 50mph
 #endif
               || (timeout > 50)) // Timeout case: car stop in a large time
           {
@@ -258,14 +259,16 @@ int main(int argc, char* argv[])
                       << " average_err " << err/it 
                       << " Kp: " << p[0] << " Ki: " << p[1] << " Kd: " << p[2] 
                       << std::endl;
-            p[0] += 1; // Change this to update all p[]
+            p[1] += 0.001; // Change this to update all p[]
 #endif
             pid.Init(p[0], p[1], p[2]);
 
+            // Reset
             it = 0;
             timeout = 0;
             err = 0;
             road = 0;
+            isConnected = false;
 
             std::string msg = "42[\"reset\",{}]";
             ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
@@ -274,12 +277,12 @@ int main(int argc, char* argv[])
           {
             it++;
             err += fabs(cte); // Collect total err
-            road += speed*dt/1000;
+            road += speed*0.44704 * dt/1000; // Convert from miles per hour to meters per second
           }
 
-          pid.UpdateError(cte, dt/1000);
-
+          pid.UpdateError(0-cte, dt/1000); // Set point is 0 mean center lane
           steer_value = pid.TotalError();
+
           if (steer_value > steer_value_max)
           {
             steer_value = steer_value_max;
@@ -288,14 +291,14 @@ int main(int argc, char* argv[])
           {
             steer_value = steer_value_min;
           }
-          steer_value = (deg2rad(angle) + steer_value) / 2;
+
 #ifdef MODE_NORMAL
           out_file_ << it << "\t" << cte << "\t" << steer_value << std::endl;
           // DEBUG
           std::cout << it << "\t" << cte << "\t" << steer_value << std::endl;
 #endif
 
-          if (fabs(steer_value) > 0.3 && speed > 50)
+          if (fabs(steer_value) > 0.3 && speed > throttle_max*100*3/5)
           {
             throttle_value = -0.1; // Brake to decresse speed incase high steering angle
           }
@@ -336,13 +339,30 @@ int main(int argc, char* argv[])
     }
   });
 
-  h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
+  h.onConnection([&h,&pid](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req)
+  {
     std::cout << "Connected!!!" << std::endl;
+
+    isConnected = true;
+
+    pid.Init(p[0], p[1], p[2]);
+    // Reset
+    it = 0;
+    timeout = 0;
+    err = 0;
+    road = 0;
+
+    // Get the first time point
+    gettimeofday(&tp, NULL);
+    pre_time = tp.tv_sec * 1000 + tp.tv_usec / 1000;
   });
 
-  h.onDisconnection([&h,&out_file_](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length) {
+  h.onDisconnection([&h,&out_file_](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length)
+  {
     ws.close();
     std::cout << "Disconnected" << std::endl;
+
+    isConnected = false;
     // close files
     if (out_file_.is_open())
     {
