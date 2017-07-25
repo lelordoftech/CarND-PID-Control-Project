@@ -5,9 +5,9 @@ The goals / steps of this project are the following:
 * Build a PID controller and tune the PID hyperparameters by applying the general processing flow as described in the previous lessons.
 
 [//]: # (Image References)
-[image1]: ./output_images/compilation.png
-[image2]: ./output_images/manual_result.png
-[image3]: ./output_images/auto_result.png
+[image1]: ./output_images/compilation.PNG
+[image2]: ./output_images/manual_result.PNG
+[image3]: ./output_images/auto_result.PNG
 [video1]: ./output_videos/P_high.mp4
 [video2]: ./output_videos/P_low.mp4
 [video3]: ./output_videos/P_best.mp4
@@ -128,28 +128,43 @@ When CTE is large, it help reduce CTE quickly.
 Until CTE is small, it reduce CTE slow down.
 
 * P gain is too large will make our system unstable:
+
 Here's a [link to my video test with Kp is 1.0][video1]
+
 * P gain is too small will make our system weak:
+
 Here's a [link to my video test with Kp is 0.01][video2]
+
 * P gain is suitable will make our system stable:
+
 Here's a [link to my video test with Kp is 0.2][video3]
 
 ##### 1.2 D controller: predict the future value of the error, reduce overshot.
 
 * D gain is too large will make our system reduce time response but will make it unstable:
+
 Here's a [link to my video test with Kd is 10.0][video4]
+
 * D gain is too small will have too few effect to system:
+
 Here's a [link to my video test with Kd is 0.01][video5]
+
 * D gain is suitable will make our system stable with best time response and minimal overshot:
+
 Here's a [link to my video test with Kd is 0.08][video6]
 
 ##### 1.3 I controller: makes system stable by reduce overshot and closest setpoint in case the error too small.
 
 * I gain is too large will make our system unstable:
+
 Here's a [link to my video test with Ki is 1.0][video7]
+
 * I gain is too small will have too few effect to system:
+
 Here's a [link to my video test with Ki is 0.001][video8]
+
 * I gain is suitable will make our system stable with best time response and minimal overshot:
+
 Here's a [link to my video test with Ki is 0.08][video9]
 
 #### 2. Describe how the final hyperparameters were chosen.
@@ -197,7 +212,11 @@ Here's a [link to my video result for auto tuning][video11]
 
 #### 1. The vehicle must successfully drive a lap around the track.
 
-Here's a [link to my final video result][video11]
+My Twiddle algorithm maybe is not good, so it make car run smoothly when the lane have little curve. When the curve angle is large, the result is not good.
+
+So finally I choose the result of manual tuning.
+
+Here's a [link to my final video result][video10]
 
 ---
 
@@ -230,3 +249,4 @@ Here I'll talk about the approach I took, what techniques I used, what worked an
 ##### Improve:
 
 * Implement PID speed to control speed with CTE together.
+* Improve Twiddle function
