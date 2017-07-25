@@ -66,7 +66,7 @@ const double throttle_max = 0.5;
 struct timeval tp;
 double pre_time = 0;
 
-double p[3] = {0.2, 0.098, 0.08};
+double p[3] = {0.389311, 0.0961499, 0.184516};
 unsigned int it = 0; // Count number of test sample
 unsigned int timeout = 0; // Count time in case Car cannot run
 double err = 0;

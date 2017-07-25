@@ -6,6 +6,8 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 [image1]: ./output_images/compilation.png
+[image2]: ./output_images/manual_result.png
+[image3]: ./output_images/auto_result.png
 [video1]: ./output_videos/P_high.mp4
 [video2]: ./output_videos/P_low.mp4
 [video3]: ./output_videos/P_best.mp4
@@ -126,29 +128,29 @@ When CTE is large, it help reduce CTE quickly.
 Until CTE is small, it reduce CTE slow down.
 
 * P gain is too large will make our system unstable:
-Here's a [link to my video test][video1]
+Here's a [link to my video test with Kp is 1.0][video1]
 * P gain is too small will make our system weak:
-Here's a [link to my video test][video2]
+Here's a [link to my video test with Kp is 0.01][video2]
 * P gain is suitable will make our system stable:
-Here's a [link to my video test][video3]
+Here's a [link to my video test with Kp is 0.2][video3]
 
 ##### 1.2 D controller: predict the future value of the error, reduce overshot.
 
 * D gain is too large will make our system reduce time response but will make it unstable:
-Here's a [link to my video test][video4]
+Here's a [link to my video test with Kd is 10.0][video4]
 * D gain is too small will have too few effect to system:
-Here's a [link to my video test][video5]
+Here's a [link to my video test with Kd is 0.01][video5]
 * D gain is suitable will make our system stable with best time response and minimal overshot:
-Here's a [link to my video test][video6]
+Here's a [link to my video test with Kd is 0.08][video6]
 
 ##### 1.3 I controller: makes system stable by reduce overshot and closest setpoint in case the error too small.
 
 * I gain is too large will make our system unstable:
-Here's a [link to my video test][video7]
+Here's a [link to my video test with Ki is 1.0][video7]
 * I gain is too small will have too few effect to system:
-Here's a [link to my video test][video8]
+Here's a [link to my video test with Ki is 0.001][video8]
 * I gain is suitable will make our system stable with best time response and minimal overshot:
-Here's a [link to my video test][video9]
+Here's a [link to my video test with Ki is 0.08][video9]
 
 #### 2. Describe how the final hyperparameters were chosen.
 
@@ -172,17 +174,23 @@ So I get a good PID gain:
 | Ki   | 0.08  |
 | Kd   | 0.08  |
 
+![alt text][image2]
+
+Total error is 1491.72.
 Here's a [link to my video result for manual tuning][video10]
 
 Finally, I use Twiddle algorithm to tune PID gain again to get better result.
 So I get a best PID gain:
 
-| Gain | Value |
-|:----:|:-----:|
-| Kp   | 0.2   |
-| Ki   | 0.08  |
-| Kd   | 0.08  |
+| Gain | Value     |
+|:----:|:---------:|
+| Kp   | 0.389311  |
+| Ki   | 0.0961499 |
+| Kd   | 0.184516  |
 
+![alt text][image3]
+
+Total error is smaller, 1209.46.
 Here's a [link to my video result for auto tuning][video11]
 
 ### Simulation
